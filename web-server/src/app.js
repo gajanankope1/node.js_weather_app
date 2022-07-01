@@ -1,6 +1,9 @@
 const path = require("path");
 const express = require("express");
-const hbs=require("hbs");
+const hbs = require("hbs");
+const forcast = require("./utils/forcast");
+const geocode = require("./utils/giocode");
+const request = require("request");
 
 // // console.log(__dirname);
 // console.log(path.join(__dirname,"../public"));
@@ -21,38 +24,66 @@ hbs.registerPartials(partialsPath);
 app.use(express.static(publicDirectoryPath));
 
 app.get("", (req, res) => {
-    res.render("index",{
-        title:"Weather App",
-        name:"andrew work"
+    res.render("index", {
+        title: "Weather App",
+        name: "andrew work"
     })
 });
 
 app.get("/about", (req, res) => {
-    res.render("about",{
-        title:"About App",
-        name:"stephen playming"
+    res.render("about", {
+        title: "About App",
+        name: "stephen playming"
     })
 });
 
 app.get("/help", (req, res) => {
-    res.render("help",{
-        title:"Help App",
-        name:"max stemyer"
+    res.render("help", {
+        title: "Help App",
+        name: "max stemyer"
     })
 });
 
 app.get("/weather", (req, res) => {
-    res.send({
-        forcast: "it is showing",
-        location: "south eastern brazil"
+    if (!req.query.search) {
+        return res.send({
+            error: "you must provide address"
+        });
+    }
+
+    geocode(req.query.search, (error, location) => {
+        if (error) {
+            return res.send({ error })
+        }
+        forcast(location, (error, address) => {
+            if (error) {
+                return res.send({ error });
+            }
+            res.send({
+                location,
+                address
+            });
+        })
     });
 });
 
-app.get("/help/*",(req,res)=>{
+app.get("/products", (req, res) => {
+    if (!req.query.search) {
+        return res.send({
+            error: "you must provide search term"
+        });
+    }
+    console.log(req.query);
+    res.send({
+        products: []
+    });
+});
+
+app.get("/help/*", (req, res) => {
     res.send("help article not found");
 })
 
-app.get("*",(req,res)=>{
+app.get("*", (req, res) => {
     res.send("my 404 page");
 })
 
